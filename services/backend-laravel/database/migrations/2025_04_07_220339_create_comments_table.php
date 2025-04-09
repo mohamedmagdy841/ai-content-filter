@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('post_id')->constrained()->onDelete('cascade');
             $table->text('content');
-            $table->string('status')->default('under_review');
+            $table->enum('status', ['pending', 'flagged', 'deleted', 'approved'])->default('pending');
             $table->timestamps();
         });
     }
