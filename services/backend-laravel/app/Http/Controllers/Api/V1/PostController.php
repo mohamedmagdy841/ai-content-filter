@@ -7,8 +7,10 @@ use App\Http\Helpers\HttpResponse;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
+use App\Models\FilterLog;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class PostController extends Controller
 {
@@ -31,7 +33,26 @@ class PostController extends Controller
     {
         $data = $request->validated();
         $data["user_id"] = auth()->id();
+
+        $response = Http::post('http://localhost:8080/analyze', [
+            'title' => $data['title'],
+            'content' => $data['content'],
+            'ai_model' => $data['ai_model'],
+        ])->json();
+
+        if($response["is_flagged"])
+        {
+            $data["status"] = "flagged";
+        }
+
         $post = Post::create($data);
+
+        if ($response["is_flagged"]) {
+            $post->filterLogs()->create([
+                'reason' => $response["reason"],
+                'confidence' => $response["score"] ?? null,
+            ]);
+        }
 
         return HttpResponse::sendResponse(new PostResource($post), 'Post created successfully.', 201);
     }
