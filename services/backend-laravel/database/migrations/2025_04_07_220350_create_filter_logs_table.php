@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('flagged_by')->default('AI');
             $table->string('reason')->nullable();
             $table->float('confidence')->nullable();
-            $table->string('status')->default('flagged');
             $table->timestamps();
         });
     }
