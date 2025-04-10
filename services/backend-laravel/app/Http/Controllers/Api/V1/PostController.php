@@ -19,7 +19,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::with('user')->latest()->get();
+        $posts = Post::with(['user', 'comments'])->latest()->get();
         if ($posts->isEmpty()) {
             return HttpResponse::sendResponse([], 'No posts found.', 404);
         }
@@ -62,7 +62,7 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        $post = Post::with('user')->find($id);
+        $post = Post::with(['user', 'comments'])->find($id);
         if (!$post) {
             return HttpResponse::sendResponse([], 'Post not found.', 404);
         }
@@ -75,7 +75,7 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, string $id)
     {
-        $post = Post::with('user')->find($id);
+        $post = Post::find($id);
         if (!$post) {
             return HttpResponse::sendResponse([], 'Post not found.', 404);
         }
@@ -92,7 +92,7 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        $post = Post::with('user')->find($id);
+        $post = Post::find($id);
         if (!$post) {
             return HttpResponse::sendResponse([], 'Post not found.', 404);
         }
