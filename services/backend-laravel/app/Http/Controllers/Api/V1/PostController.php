@@ -8,14 +8,18 @@ use App\Http\Helpers\HttpResponse;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
-use App\Models\FilterLog;
 use App\Models\Post;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use App\Services\AnalyzeService;
 
 class PostController extends Controller
 {
+    protected $analyzeService;
+
+    public function __construct(AnalyzeService $analyzeService)
+    {
+        $this->analyzeService = $analyzeService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -41,22 +45,14 @@ class PostController extends Controller
         $data["user_id"] = auth()->id();
         $status = StatusEnum::PENDING->value;
 
-        try {
-            $response = Http::post("http://localhost:8080/analyze", [
-                'title' => $data['title'],
-                'content' => $data['content'],
-                'ai_model' => $data['ai_model'],
-            ])->json();
+        $response = $this->analyzeService->analyzeContent($data['content'], $data['ai_model'], $data['title']);
 
-            if($response["is_flagged"])
-            {
+        if ($response) {
+            if ($response["is_flagged"]){
                 $status = StatusEnum::FLAGGED->value;
             } else {
                 $status = StatusEnum::APPROVED->value;
             }
-
-        } catch (\Exception $e) {
-            Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
         }
 
         $data["status"] = $status;
@@ -105,18 +101,17 @@ class PostController extends Controller
         }
 
         $data = $request->validated();
+
         $status = StatusEnum::PENDING->value;
 
-        try {
-            $response = Http::post("http://localhost:8080/analyze", [
-                'title' => $data["title"],
-                'content' => $data['content'],
-                'ai_model' => $data['ai_model'],
-            ])->json();
+        $response = $this->analyzeService->analyzeContent($data['content'], $data['ai_model'], $data['title']);
 
-            $status = $response["is_flagged"] ? StatusEnum::FLAGGED->value : StatusEnum::APPROVED->value;
-        } catch (\Exception $e) {
-            Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
+        if ($response) {
+            if ($response["is_flagged"]){
+                $status = StatusEnum::FLAGGED->value;
+            } else {
+                $status = StatusEnum::APPROVED->value;
+            }
         }
 
         $data["status"] = $status;

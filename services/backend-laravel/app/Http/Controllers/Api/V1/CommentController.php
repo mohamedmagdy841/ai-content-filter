@@ -10,12 +10,20 @@ use App\Http\Requests\UpdateCommentRequest;
 use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use App\Models\Post;
+use App\Services\AnalyzeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
 {
+    protected $analyzeService;
+
+    public function __construct(AnalyzeService $analyzeService)
+    {
+        $this->analyzeService = $analyzeService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -41,21 +49,14 @@ class CommentController extends Controller
         $data["post_id"] = $post->id;
         $status = StatusEnum::PENDING->value;
 
-        try {
-            $response = Http::post("http://localhost:8080/analyze", [
-                'content' => $data['content'],
-                'ai_model' => $data['ai_model'],
-            ])->json();
+        $response = $this->analyzeService->analyzeContent($data['content'], $data['ai_model']);
 
-            if($response["is_flagged"])
-            {
+        if ($response) {
+            if ($response["is_flagged"]){
                 $status = StatusEnum::FLAGGED->value;
             } else {
                 $status = StatusEnum::APPROVED->value;
             }
-
-        } catch (\Exception $e) {
-            Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
         }
 
         $data["status"] = $status;
@@ -96,15 +97,14 @@ class CommentController extends Controller
         $data = $request->validated();
         $status = StatusEnum::PENDING->value;
 
-        try {
-            $response = Http::post("http://localhost:8080/analyze", [
-                'content' => $data['content'],
-                'ai_model' => $data['ai_model'],
-            ])->json();
+        $response = $this->analyzeService->analyzeContent($data['content'], $data['ai_model']);
 
-            $status = $response["is_flagged"] ? StatusEnum::FLAGGED->value : StatusEnum::APPROVED->value;
-        } catch (\Exception $e) {
-            Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
+        if ($response) {
+            if ($response["is_flagged"]){
+                $status = StatusEnum::FLAGGED->value;
+            } else {
+                $status = StatusEnum::APPROVED->value;
+            }
         }
 
         $data["status"] = $status;
