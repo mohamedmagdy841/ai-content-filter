@@ -19,10 +19,14 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::with(['user', 'comments'])->latest()->get();
+        $posts = Post::with(['user', 'comments' => function ($query) {
+            $query->approved();
+        }])->approved()->latest()->get();
+
         if ($posts->isEmpty()) {
             return HttpResponse::sendResponse([], 'No posts found.', 404);
         }
+
         return HttpResponse::sendResponse(PostResource::collection($posts), 'Posts retrieved successfully.');
     }
 
@@ -32,6 +36,7 @@ class PostController extends Controller
     public function store(StorePostRequest $request)
     {
         $data = $request->validated();
+
         $data["user_id"] = auth()->id();
 
         $response = Http::post('http://localhost:8080/analyze', [
@@ -62,7 +67,10 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        $post = Post::with(['user', 'comments'])->find($id);
+        $post = Post::with(['user', 'comments' => function ($query) {
+            $query->approved();
+        }])->approved()->find($id);
+
         if (!$post) {
             return HttpResponse::sendResponse([], 'Post not found.', 404);
         }
