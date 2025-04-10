@@ -11,6 +11,7 @@ use App\Models\Comment;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
 {
@@ -37,19 +38,30 @@ class CommentController extends Controller
         $data = $request->validated();
         $data["user_id"] = auth()->id();
         $data["post_id"] = $post->id;
+        $status = "pending";
 
-        $response = Http::post("http://localhost:8080/analyze", [
-            'content' => $data['content'],
-        ])->json();
+        try {
+            $response = Http::post("http://localhost:8080/analyze", [
+                'content' => $data['content'],
+                'ai_model' => $data['ai_model'],
+            ])->json();
 
-        if($response["is_flagged"])
-        {
-            $data["status"] = "flagged";
+            if($response["is_flagged"])
+            {
+                $status = "flagged";
+            } else {
+                $status = "approved";
+            }
+
+        } catch (\Exception $e) {
+            Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
         }
+
+        $data["status"] = $status;
 
         $comment = $post->comments()->create($data);
 
-        if($response["is_flagged"])
+        if($status === 'flagged')
         {
             $comment->filterLogs()->create([
                 'reason' => $response["reason"],
@@ -77,16 +89,23 @@ class CommentController extends Controller
         }
 
         $data = $request->validated();
+        $status = "pending";
 
-        $response = Http::post("http://localhost:8080/analyze", [
-            'content' => $data['content'],
-        ])->json();
+        try {
+            $response = Http::post("http://localhost:8080/analyze", [
+                'content' => $data['content'],
+                'ai_model' => $data['ai_model'],
+            ])->json();
 
-        $data["status"] = $response["is_flagged"] ? "flagged" : "approved";
+            $status = $response["is_flagged"] ? "flagged" : "approved";
+        } catch (\Exception $e) {
+            Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
+        }
 
+        $data["status"] = $status;
         $comment->update($data);
 
-        if($response["is_flagged"])
+        if($status === 'flagged')
         {
             $comment->filterLogs()->updateOrCreate([], [
                 'reason' => $response["reason"],
