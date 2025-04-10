@@ -78,6 +78,10 @@ class CommentController extends Controller
      */
     public function update(UpdateCommentRequest $request, Post $post, Comment $comment)
     {
+        if(!$comment) {
+            return HttpResponse::sendResponse([], 'Comment not found', 404);
+        }
+
         if($comment->post_id != $post->id)
         {
             return HttpResponse::sendResponse([], 'Comment does not belong to this post', 404);
@@ -136,6 +140,6 @@ class CommentController extends Controller
         $comment->filterLogs()->delete();
         $comment->delete();
 
-        return HttpResponse::sendResponse(new CommentResource($comment), 'Comment deleted successfully');
+        return HttpResponse::sendResponse([], 'Comment deleted successfully');
     }
 }

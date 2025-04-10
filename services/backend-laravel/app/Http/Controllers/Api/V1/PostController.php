@@ -122,7 +122,7 @@ class PostController extends Controller
 
         $post->update($data);
 
-        if($response["is_flagged"])
+        if($status === "flagged")
         {
             $post->filterLogs()->updateOrCreate([], [
                 'reason' => $response["reason"],
