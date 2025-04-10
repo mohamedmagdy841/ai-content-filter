@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\StatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\HttpResponse;
 use App\Http\Requests\StorePostRequest;
@@ -38,7 +39,7 @@ class PostController extends Controller
     {
         $data = $request->validated();
         $data["user_id"] = auth()->id();
-        $status = 'pending';
+        $status = StatusEnum::PENDING->value;
 
         try {
             $response = Http::post("http://localhost:8080/analyze", [
@@ -49,9 +50,9 @@ class PostController extends Controller
 
             if($response["is_flagged"])
             {
-                $status = "flagged";
+                $status = StatusEnum::FLAGGED->value;
             } else {
-                $status = "approved";
+                $status = StatusEnum::APPROVED->value;
             }
 
         } catch (\Exception $e) {
@@ -62,7 +63,7 @@ class PostController extends Controller
 
         $post = Post::create($data);
 
-        if ($status === 'flagged') {
+        if ($status === StatusEnum::FLAGGED->value) {
             $post->filterLogs()->create([
                 'reason' => $response["reason"],
                 'confidence' => $response["score"] ?? null,
@@ -104,7 +105,7 @@ class PostController extends Controller
         }
 
         $data = $request->validated();
-        $status = "pending";
+        $status = StatusEnum::PENDING->value;
 
         try {
             $response = Http::post("http://localhost:8080/analyze", [
@@ -113,7 +114,7 @@ class PostController extends Controller
                 'ai_model' => $data['ai_model'],
             ])->json();
 
-            $status = $response["is_flagged"] ? "flagged" : "approved";
+            $status = $response["is_flagged"] ? StatusEnum::FLAGGED->value : StatusEnum::APPROVED->value;
         } catch (\Exception $e) {
             Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
         }
@@ -122,7 +123,7 @@ class PostController extends Controller
 
         $post->update($data);
 
-        if($status === "flagged")
+        if($status === StatusEnum::FLAGGED->value)
         {
             $post->filterLogs()->updateOrCreate([], [
                 'reason' => $response["reason"],

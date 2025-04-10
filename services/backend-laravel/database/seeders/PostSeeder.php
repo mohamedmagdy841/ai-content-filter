@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\StatusEnum;
 use App\Models\Comment;
 use App\Models\Post;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -18,7 +19,7 @@ class PostSeeder extends Seeder
 
             $comments = Comment::factory()->count(3)->create(['post_id' => $post->id]);
 
-            if ($post->status === 'flagged') {
+            if ($post->status === StatusEnum::FLAGGED->value) {
                 $post->filterLogs()->create([
                     'reason' => fake()->sentence(),
                     'confidence' => fake()->randomFloat(2, 0.5, 1),
@@ -26,7 +27,7 @@ class PostSeeder extends Seeder
             }
 
             $comments->each(function ($comment) {
-                if ($comment->status === 'flagged') {
+                if ($comment->status === StatusEnum::FLAGGED->value) {
                     $comment->filterLogs()->create([
                         'reason' => fake()->sentence(),
                         'confidence' => fake()->randomFloat(2, 0, 1),

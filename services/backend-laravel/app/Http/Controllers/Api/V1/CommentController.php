@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\StatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\HttpResponse;
 use App\Http\Requests\StoreCommentRequest;
@@ -38,7 +39,7 @@ class CommentController extends Controller
         $data = $request->validated();
         $data["user_id"] = auth()->id();
         $data["post_id"] = $post->id;
-        $status = "pending";
+        $status = StatusEnum::PENDING->value;
 
         try {
             $response = Http::post("http://localhost:8080/analyze", [
@@ -48,9 +49,9 @@ class CommentController extends Controller
 
             if($response["is_flagged"])
             {
-                $status = "flagged";
+                $status = StatusEnum::FLAGGED->value;
             } else {
-                $status = "approved";
+                $status = StatusEnum::APPROVED->value;
             }
 
         } catch (\Exception $e) {
@@ -61,7 +62,7 @@ class CommentController extends Controller
 
         $comment = $post->comments()->create($data);
 
-        if($status === 'flagged')
+        if($status === StatusEnum::FLAGGED->value)
         {
             $comment->filterLogs()->create([
                 'reason' => $response["reason"],
@@ -93,7 +94,7 @@ class CommentController extends Controller
         }
 
         $data = $request->validated();
-        $status = "pending";
+        $status = StatusEnum::PENDING->value;
 
         try {
             $response = Http::post("http://localhost:8080/analyze", [
@@ -101,7 +102,7 @@ class CommentController extends Controller
                 'ai_model' => $data['ai_model'],
             ])->json();
 
-            $status = $response["is_flagged"] ? "flagged" : "approved";
+            $status = $response["is_flagged"] ? StatusEnum::FLAGGED->value : StatusEnum::APPROVED->value;
         } catch (\Exception $e) {
             Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
         }
@@ -109,7 +110,7 @@ class CommentController extends Controller
         $data["status"] = $status;
         $comment->update($data);
 
-        if($status === 'flagged')
+        if($status === StatusEnum::FLAGGED->value)
         {
             $comment->filterLogs()->updateOrCreate([], [
                 'reason' => $response["reason"],
