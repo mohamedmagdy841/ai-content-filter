@@ -12,7 +12,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/logout', 'logout')->middleware('auth:sanctum');
 });
 
-Route::prefix('posts')->group(function () {
+Route::middleware(['throttle:api'])->prefix('posts')->group(function () {
     Route::get('/', [PostController::class, 'index']);
     Route::get('/{id}', [PostController::class, 'show']);
 
