@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatusEnum;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,10 @@ class Comment extends Model
         'post_id',
         'content',
         'status'
+    ];
+
+    protected $casts = [
+        'status' => StatusEnum::class,
     ];
 
     public function user(): BelongsTo

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\StatusEnum;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,7 +21,7 @@ class PostFactory extends Factory
         return [
             'title' => fake()->sentence(),
             'content' => fake()->text(),
-            'status' => fake()->randomElement(['pending', 'flagged', 'deleted', 'approved']),
+            'status' => fake()->randomElement(StatusEnum::cases()),
             'user_id' => User::inRandomOrder()->first()->id,
         ];
     }
