@@ -76,14 +76,36 @@ class PostController extends Controller
     public function update(UpdatePostRequest $request, string $id)
     {
         $post = Post::find($id);
+
         if (!$post) {
             return HttpResponse::sendResponse([], 'Post not found.', 404);
         }
+
         if ($post->user_id != $request->user()->id) {
             return HttpResponse::sendResponse([], 'You are not allowed to update this post.', 403);
         }
 
-        $post->update($request->validated());
+        $data = $request->validated();
+
+        $response = Http::post('http://localhost:8080/analyze', [
+            'title' => $data['title'],
+            'content' => $data['content'],
+        ]);
+
+        $data["status"] = $response["is_flagged"] ? "flagged" : "approved";
+
+        $post->update($data);
+
+        if($response["is_flagged"])
+        {
+            $post->filterLogs()->updateOrCreate([], [
+                'reason' => $response["reason"],
+                'confidence' => $response["score"] ?? null,
+            ]);
+        } else {
+            $post->filterLogs()->delete();
+        }
+
         return HttpResponse::sendResponse(new PostResource($post), 'Post updated successfully.');
     }
 
@@ -101,6 +123,8 @@ class PostController extends Controller
         }
 
         $post->delete();
+        $post->filterLogs()->delete();
+
         return HttpResponse::sendResponse([], 'Post deleted successfully.');
     }
 }
