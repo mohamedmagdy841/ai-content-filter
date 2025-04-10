@@ -19,11 +19,13 @@ class CommentController extends Controller
      */
     public function index(Post $post)
     {
-        $comments = $post->comments()->with('user')->get();
+        $comments = $post->comments()->approved()->with('user')->get();
+
         if($comments->isEmpty())
         {
             return HttpResponse::sendResponse([], 'No comments found', 404);
         }
+
         return HttpResponse::sendResponse(CommentResource::collection($comments), 'Posts retrieved successfully');
     }
 
