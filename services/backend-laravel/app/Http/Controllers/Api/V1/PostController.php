@@ -11,6 +11,7 @@ use App\Models\FilterLog;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PostController extends Controller
 {
@@ -36,23 +37,32 @@ class PostController extends Controller
     public function store(StorePostRequest $request)
     {
         $data = $request->validated();
-
         $data["user_id"] = auth()->id();
+        $status = 'pending';
 
-        $response = Http::post('http://localhost:8080/analyze', [
-            'title' => $data['title'],
-            'content' => $data['content'],
-            'ai_model' => $data['ai_model'],
-        ])->json();
+        try {
+            $response = Http::post("http://localhost:8080/analyze", [
+                'title' => $data['title'],
+                'content' => $data['content'],
+                'ai_model' => $data['ai_model'],
+            ])->json();
 
-        if($response["is_flagged"])
-        {
-            $data["status"] = "flagged";
+            if($response["is_flagged"])
+            {
+                $status = "flagged";
+            } else {
+                $status = "approved";
+            }
+
+        } catch (\Exception $e) {
+            Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
         }
+
+        $data["status"] = $status;
 
         $post = Post::create($data);
 
-        if ($response["is_flagged"]) {
+        if ($status === 'flagged') {
             $post->filterLogs()->create([
                 'reason' => $response["reason"],
                 'confidence' => $response["score"] ?? null,
@@ -94,13 +104,21 @@ class PostController extends Controller
         }
 
         $data = $request->validated();
+        $status = "pending";
 
-        $response = Http::post('http://localhost:8080/analyze', [
-            'title' => $data['title'],
-            'content' => $data['content'],
-        ]);
+        try {
+            $response = Http::post("http://localhost:8080/analyze", [
+                'title' => $data["title"],
+                'content' => $data['content'],
+                'ai_model' => $data['ai_model'],
+            ])->json();
 
-        $data["status"] = $response["is_flagged"] ? "flagged" : "approved";
+            $status = $response["is_flagged"] ? "flagged" : "approved";
+        } catch (\Exception $e) {
+            Log::warning( "FastAPI service is currently unavailable. Please try again later." . $e->getMessage());
+        }
+
+        $data["status"] = $status;
 
         $post->update($data);
 
