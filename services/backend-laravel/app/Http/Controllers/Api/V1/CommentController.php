@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Helpers\HttpResponse;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
+use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use App\Models\Post;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class CommentController extends Controller
         {
             return HttpResponse::sendResponse([], 'No comments found', 404);
         }
-        return HttpResponse::sendResponse($comments, 'Posts retrieved successfully');
+        return HttpResponse::sendResponse(CommentResource::collection($comments), 'Posts retrieved successfully');
     }
 
     /**
@@ -54,7 +55,7 @@ class CommentController extends Controller
             ]);
         }
 
-        return HttpResponse::sendResponse($comment, 'Comment created successfully', 201);
+        return HttpResponse::sendResponse(new CommentResource($comment), 'Comment created successfully', 201);
     }
 
 
@@ -93,7 +94,7 @@ class CommentController extends Controller
             $comment->filterLogs()->delete();
         }
 
-        return HttpResponse::sendResponse($comment, 'Comment updated successfully');
+        return HttpResponse::sendResponse(new CommentResource($comment), 'Comment updated successfully');
     }
 
     /**
@@ -114,6 +115,6 @@ class CommentController extends Controller
         $comment->filterLogs()->delete();
         $comment->delete();
 
-        return HttpResponse::sendResponse($comment, 'Comment deleted successfully');
+        return HttpResponse::sendResponse(new CommentResource($comment), 'Comment deleted successfully');
     }
 }
