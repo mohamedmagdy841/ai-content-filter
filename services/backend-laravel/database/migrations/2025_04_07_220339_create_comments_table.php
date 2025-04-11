@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('content');
             $table->enum('status', ['pending', 'flagged', 'deleted', 'approved'])->default('pending');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
