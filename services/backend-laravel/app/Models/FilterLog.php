@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Support\Facades\Log;
 
 class FilterLog extends Model
 {
     /** @use HasFactory<\Database\Factories\FilterLogFactory> */
-    use HasFactory;
+    use HasFactory, Prunable;
 
     protected $fillable = [
         'content_type',
@@ -22,5 +25,15 @@ class FilterLog extends Model
     public function content()
     {
         return $this->morphTo();
+    }
+
+    public function prunable(): Builder
+    {
+        return static::where('created_at', '<=', now()->subMonth());
+    }
+
+    protected function pruning(): void
+    {
+        Log::info('Logs pruning');
     }
 }
