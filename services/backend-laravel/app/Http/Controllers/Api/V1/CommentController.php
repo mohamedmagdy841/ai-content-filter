@@ -29,14 +29,14 @@ class CommentController extends Controller
      */
     public function index(Post $post)
     {
-        $comments = $post->comments()->approved()->with('user')->get();
+        $comments = $post->comments()->approved()->with('user')->paginate(config('app.pagination.limit'));
 
         if($comments->isEmpty())
         {
             return HttpResponse::sendResponse([], 'No comments found', 404);
         }
 
-        return HttpResponse::sendResponse(CommentResource::collection($comments), 'Posts retrieved successfully');
+        return HttpResponse::paginate(CommentResource::collection($comments), 'Posts retrieved successfully');
     }
 
     /**

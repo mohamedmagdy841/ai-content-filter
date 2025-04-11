@@ -27,13 +27,13 @@ class PostController extends Controller
     {
         $posts = Post::with(['user', 'comments' => function ($query) {
             $query->approved();
-        }])->approved()->latest()->get();
+        }])->approved()->latest()->paginate(config('app.pagination.limit'));
 
         if ($posts->isEmpty()) {
             return HttpResponse::sendResponse([], 'No posts found.', 404);
         }
 
-        return HttpResponse::sendResponse(PostResource::collection($posts), 'Posts retrieved successfully.');
+        return HttpResponse::paginate(PostResource::collection($posts), 'Posts retrieved successfully.');
     }
 
     /**
