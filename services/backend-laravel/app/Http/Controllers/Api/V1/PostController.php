@@ -143,7 +143,7 @@ class PostController extends Controller
         if ($post->user_id != auth()->user()->id) {
             return HttpResponse::sendResponse([], 'You are not allowed to delete this post.', 403);
         }
-
+        $post->update(['status' => StatusEnum::DELETED]);
         $post->delete();
         $post->filterLogs()->delete();
 

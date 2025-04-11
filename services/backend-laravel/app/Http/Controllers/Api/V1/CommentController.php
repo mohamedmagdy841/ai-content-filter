@@ -138,6 +138,7 @@ class CommentController extends Controller
             return HttpResponse::sendResponse([], 'Unauthorized', 403);
         }
 
+        $comment->update(['status' => StatusEnum::DELETED]);
         $comment->filterLogs()->delete();
         $comment->delete();
 
