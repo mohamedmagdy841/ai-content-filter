@@ -1,18 +1,15 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from schemas.content import ContentData
 from openai import OpenAI
 from transformers import pipeline
 import os
 
 app = FastAPI()
 
-class PostData(BaseModel):
-    title: str
-    content: str
-    ai_model: str
+
 
 @app.post('/analyze')
-async def analyze(data: PostData):
+async def analyze(data: ContentData):
     user_input = f"Title: {data.title}\nContent: {data.content}"
     
     if data.ai_model == "gpt-3.5-turbo":
