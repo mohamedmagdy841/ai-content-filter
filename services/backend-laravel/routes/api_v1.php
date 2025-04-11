@@ -20,6 +20,7 @@ Route::middleware(['throttle:api'])->prefix('posts')->group(function () {
         Route::post('/', [PostController::class, 'store']);
         Route::put('/{id}', [PostController::class, 'update']);
         Route::delete('/{id}', [PostController::class, 'destroy']);
+        Route::patch('/{id}/restore', [PostController::class, 'restore']);
 
         // comment routes
         Route::prefix('/{post}/comments')->group(function () {
@@ -27,6 +28,7 @@ Route::middleware(['throttle:api'])->prefix('posts')->group(function () {
             Route::post('/', [CommentController::class, 'store']);
             Route::put('/{comment}', [CommentController::class, 'update']);
             Route::delete('/{comment}', [CommentController::class, 'destroy']);
+            Route::patch('/{comment}/restore', [CommentController::class, 'restore'])->withTrashed();
         });
     });
 });

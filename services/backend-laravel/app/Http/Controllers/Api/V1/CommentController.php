@@ -144,4 +144,25 @@ class CommentController extends Controller
 
         return HttpResponse::sendResponse([], 'Comment deleted successfully');
     }
+
+    public function restore(Post $post, Comment $comment)
+    {
+
+        if ($comment->post_id != $post->id) {
+            return HttpResponse::sendResponse([], 'Comment does not belong to this post.', 404);
+        }
+
+        if ($comment->user_id != auth()->id()) {
+            return HttpResponse::sendResponse([], 'Unauthorized.', 403);
+        }
+
+        if (!$comment->trashed()) {
+            return HttpResponse::sendResponse([], 'This comment is not deleted.', 400);
+        }
+
+        $comment->update(['status' => StatusEnum::PENDING]);
+        $comment->restore();
+
+        return HttpResponse::sendResponse(new CommentResource($comment), 'Comment restored successfully.');
+    }
 }
