@@ -19,7 +19,7 @@ class PostSeeder extends Seeder
 
             $comments = Comment::factory()->count(3)->create(['post_id' => $post->id]);
 
-            if ($post->status === StatusEnum::FLAGGED->value) {
+            if ($post->status === StatusEnum::FLAGGED) {
                 $post->filterLogs()->create([
                     'reason' => fake()->sentence(),
                     'confidence' => fake()->randomFloat(2, 0.5, 1),
@@ -27,7 +27,7 @@ class PostSeeder extends Seeder
             }
 
             $comments->each(function ($comment) {
-                if ($comment->status === StatusEnum::FLAGGED->value) {
+                if ($comment->status === StatusEnum::FLAGGED) {
                     $comment->filterLogs()->create([
                         'reason' => fake()->sentence(),
                         'confidence' => fake()->randomFloat(2, 0, 1),
