@@ -149,4 +149,24 @@ class PostController extends Controller
 
         return HttpResponse::sendResponse([], 'Post deleted successfully.');
     }
+
+    public function restore(string $id)
+    {
+        $post = Post::withTrashed()->find($id);
+        if (!$post) {
+            return HttpResponse::sendResponse([], 'Post not found.', 404);
+        }
+        if ($post->user_id != auth()->user()->id) {
+            return HttpResponse::sendResponse([], 'You are not allowed to restore this post.', 403);
+        }
+
+        if (!$post->trashed()) {
+            return HttpResponse::sendResponse([], 'This post is not deleted', 400);
+        }
+
+        $post->update(['status' => StatusEnum::PENDING]);
+        $post->restore();
+
+        return HttpResponse::sendResponse(new PostResource($post), 'Post restored successfully.');
+    }
 }
