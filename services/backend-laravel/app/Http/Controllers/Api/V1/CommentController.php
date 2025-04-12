@@ -67,7 +67,7 @@ class CommentController extends Controller
         {
             $comment->filterLogs()->create([
                 'reason' => $response["reason"],
-                'confidence' => $response["confidence"],
+                'confidence' => $response["score"],
             ]);
         }
 
