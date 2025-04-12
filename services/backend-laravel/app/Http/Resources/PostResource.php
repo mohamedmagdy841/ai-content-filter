@@ -18,8 +18,9 @@ class PostResource extends JsonResource
             'title'   => $this->title,
             'content' => $this->content,
             'status'  => $this->status,
-            'date'    => $this->created_at->format('y-m-d h:m a'),
+            'date'    => $this->created_at->format('Y-m-d h:m a'),
             'creator' => new UserResource($this->whenLoaded('user')),
+            'comments' => CommentResource::collection($this->whenLoaded('comments')),
         ];
     }
 }
