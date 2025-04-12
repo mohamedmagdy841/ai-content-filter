@@ -216,6 +216,7 @@ class PostControllerTest extends TestCase
         ]);
 
         $this->assertDatabaseMissing('posts', [
+            'id' => $post->id,
             'deleted_at' => $post->deleted_at,
         ]);
     }

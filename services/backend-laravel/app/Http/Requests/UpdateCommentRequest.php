@@ -22,7 +22,8 @@ class UpdateCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'content' => 'nullable|string'
+            'content' => 'nullable|string',
+            'ai_model' => 'nullable|string'
         ];
     }
 }

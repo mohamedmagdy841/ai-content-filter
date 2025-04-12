@@ -29,7 +29,7 @@ class CommentController extends Controller
      */
     public function index(Post $post)
     {
-        $comments = $post->comments()->approved()->with('user')->paginate(config('app.pagination.limit'));
+        $comments = $post->comments()->approved()->with(['user', 'post'])->paginate(config('app.pagination.limit'));
 
         if($comments->isEmpty())
         {
