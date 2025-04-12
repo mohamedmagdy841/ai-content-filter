@@ -24,6 +24,7 @@ class UpdatePostRequest extends FormRequest
         return [
             'title' => 'nullable|string',
             'content' => 'nullable|string',
+            'ai_model' => 'nullable|string',
         ];
     }
 }
