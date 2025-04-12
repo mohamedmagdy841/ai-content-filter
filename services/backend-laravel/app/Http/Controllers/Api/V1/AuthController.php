@@ -53,9 +53,6 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            if(!auth()->user()){
-                return HttpResponse::sendResponse([], 'No authenticated user found.', 401);
-            }
 
             auth()->user()->currentAccessToken()->delete();
 
