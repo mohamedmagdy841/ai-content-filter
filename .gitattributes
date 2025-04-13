@@ -1,0 +1,7 @@
+services/backend-laravel/resources/views/** linguist-vendored
+services/backend-laravel/public/assets/** linguist-vendored
+services/backend-laravel/resources/scss/** linguist-vendored
+
+*.blade.php linguist-vendored
+*.scss linguist-vendored
+*.css linguist-vendored
