@@ -17,6 +17,9 @@ class PostSeeder extends Seeder
     {
         Post::factory()->count(5)->create()->each(function ($post) {
 
+            $post->images()->create([
+                'path' => 'https://picsum.photos/seed/' . uniqid() . '/600/400',
+            ]);
             $comments = Comment::factory()->count(3)->create(['post_id' => $post->id]);
 
             if ($post->status === StatusEnum::FLAGGED) {
@@ -27,6 +30,9 @@ class PostSeeder extends Seeder
             }
 
             $comments->each(function ($comment) {
+                $comment->images()->create([
+                    'path' => 'https://picsum.photos/seed/' . uniqid() . '/400/300',
+                ]);
                 if ($comment->status === StatusEnum::FLAGGED) {
                     $comment->filterLogs()->create([
                         'reason' => fake()->sentence(),
