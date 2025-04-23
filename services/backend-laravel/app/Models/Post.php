@@ -60,4 +60,9 @@ class Post extends Model
     {
         Log::info('Posts pruning');
     }
+
+    public function images(): MorphMany
+    {
+        return $this->morphMany(Image::class, 'imageable');
+    }
 }

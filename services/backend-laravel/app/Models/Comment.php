@@ -60,4 +60,9 @@ class Comment extends Model
     {
         Log::info('Comments pruning');
     }
+
+    public function images(): MorphMany
+    {
+        return $this->morphMany(Image::class, 'imageable');
+    }
 }
