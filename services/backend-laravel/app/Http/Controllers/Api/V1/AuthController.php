@@ -18,6 +18,7 @@ class AuthController extends Controller
         DB::beginTransaction();
         try {
             $user = User::create($request->validated());
+            $user->assignRole('user');
 
             DB::commit();
 
