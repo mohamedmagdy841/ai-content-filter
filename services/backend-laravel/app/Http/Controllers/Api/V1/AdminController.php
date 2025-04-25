@@ -25,7 +25,7 @@ class AdminController extends Controller implements HasMiddleware
 
     public function getAllLogs()
     {
-        $filteredLogs = FilterLog::paginate(config('app.pagination.limit'));
+        $filteredLogs = FilterLog::with('content')->paginate(config('app.pagination.limit'));
         return HttpResponse::paginate(FilterLogResource::collection($filteredLogs), 'Filtered logs retrieved successfully.');
     }
     public function getFilteredPosts()

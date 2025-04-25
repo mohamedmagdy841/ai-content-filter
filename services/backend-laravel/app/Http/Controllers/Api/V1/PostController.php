@@ -10,10 +10,9 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Services\AnalyzeService;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class PostController extends Controller implements HasMiddleware
+
+class PostController extends Controller
 {
     protected $analyzeService;
 
@@ -22,19 +21,12 @@ class PostController extends Controller implements HasMiddleware
         $this->analyzeService = $analyzeService;
     }
 
-    public static function middleware(): array
-    {
-        return[
-            new Middleware('role:admin,user')
-        ];
-    }
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $posts = Post::with(['user', 'comments' => function ($query) {
+        $posts = Post::with(['user','tags', 'images', 'comments' => function ($query) {
             $query->approved();
         }])->approved()->latest()->paginate(config('app.pagination.limit'));
 
@@ -83,7 +75,7 @@ class PostController extends Controller implements HasMiddleware
      */
     public function show(string $id)
     {
-        $post = Post::with(['user', 'comments' => function ($query) {
+        $post = Post::with(['user','tags', 'images', 'comments' => function ($query) {
             $query->approved();
         }])->approved()->find($id);
 
