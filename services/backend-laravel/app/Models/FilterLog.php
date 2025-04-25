@@ -36,4 +36,12 @@ class FilterLog extends Model
     {
         Log::info('Logs pruning');
     }
+
+    public static function getFilteredPosts()
+    {
+        return self::where('content_type', Post::class)
+            ->with('content')
+            ->get()
+            ->pluck('content');
+    }
 }

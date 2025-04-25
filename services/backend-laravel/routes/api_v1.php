@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AdminController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\PostController;
@@ -10,6 +11,14 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/login', 'login');
     Route::post('/register', 'register');
     Route::post('/logout', 'logout')->middleware('auth:sanctum');
+});
+
+Route::middleware(['throttle:api', 'auth:sanctum'])->prefix('/admins')->group(function () {
+    Route::get('/filtered-logs', [AdminController::class, 'getAllLogs']);
+    Route::get('/filtered-posts', [AdminController::class, 'getFilteredPosts']);
+//    Route::post('/filtered-posts', [AdminController::class, 'approveOrRejectPost']);
+    Route::get('/filtered-comments', [AdminController::class, 'getFilteredComments']);
+//    Route::post('/filtered-comments', [AdminController::class, 'approveOrRejectComment']);
 });
 
 Route::middleware(['throttle:api'])->prefix('posts')->group(function () {

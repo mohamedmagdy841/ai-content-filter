@@ -10,14 +10,23 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Services\AnalyzeService;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class PostController extends Controller
+class PostController extends Controller implements HasMiddleware
 {
     protected $analyzeService;
 
     public function __construct(AnalyzeService $analyzeService)
     {
         $this->analyzeService = $analyzeService;
+    }
+
+    public static function middleware(): array
+    {
+        return[
+            new Middleware('role:admin,user')
+        ];
     }
 
     /**
