@@ -9,7 +9,11 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
+use App\Models\User;
+use App\Notifications\ContentFlaggedNotification;
 use App\Services\AnalyzeService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 
 class PostController extends Controller
@@ -65,6 +69,9 @@ class PostController extends Controller
                 'reason' => $response["reason"],
                 'confidence' => $response["score"] ?? null,
             ]);
+            $admins = User::role('admin')->get();
+            Log::info($admins);
+            Notification::sendNow($admins, new ContentFlaggedNotification($post, 'post'));
         }
 
         return HttpResponse::sendResponse(new PostResource($post), 'Post created successfully.', 201);
