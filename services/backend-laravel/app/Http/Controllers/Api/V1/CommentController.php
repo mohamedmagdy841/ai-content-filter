@@ -10,10 +10,13 @@ use App\Http\Requests\UpdateCommentRequest;
 use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use App\Models\Post;
+use App\Models\User;
+use App\Notifications\ContentFlaggedNotification;
 use App\Services\AnalyzeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class CommentController extends Controller
 {
@@ -69,6 +72,8 @@ class CommentController extends Controller
                 'reason' => $response["reason"],
                 'confidence' => $response["score"],
             ]);
+            $admins = User::role('admin')->get();
+            Notification::sendNow($admins, new ContentFlaggedNotification($comment, 'comment'));
         }
 
         return HttpResponse::sendResponse(new CommentResource($comment), 'Comment created successfully', 201);
