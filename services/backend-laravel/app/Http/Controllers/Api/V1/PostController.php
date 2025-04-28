@@ -70,7 +70,6 @@ class PostController extends Controller
                 'confidence' => $response["score"] ?? null,
             ]);
             $admins = User::role('admin')->get();
-            Log::info($admins);
             Notification::sendNow($admins, new ContentFlaggedNotification($post, 'post'));
         }
 
