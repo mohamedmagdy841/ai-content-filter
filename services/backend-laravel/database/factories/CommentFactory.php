@@ -22,7 +22,9 @@ class CommentFactory extends Factory
         return [
             'content' => fake()->text(),
             'status' => fake()->randomElement(StatusEnum::cases()),
-            'user_id' => User::inRandomOrder()->first()->id,
+            'user_id' => User::whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'admin');
+            })->inRandomOrder()->first()->id,
             'post_id' => Post::inRandomOrder()->first()->id,
         ];
     }
