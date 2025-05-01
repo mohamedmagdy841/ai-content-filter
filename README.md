@@ -1,6 +1,6 @@
 # AI-Powered Content Filtering API
 
-This project is a full-featured Laravel + FastAPI backend for a social platform that automatically filters toxic and hateful content from posts and comments using AI.
+This project is a full-featured Laravel + FastAPI backend for a social platform that automatically filters toxic and hateful content from posts and comments using AI, with asynchronous communication handled via the RabbitMQ message broker.
 
 <table>
   <tr>
@@ -12,6 +12,11 @@ This project is a full-featured Laravel + FastAPI backend for a social platform 
     <td align="center">
       <a href="https://fastapi.tiangolo.com" target="_blank">
         <img src="https://github.com/user-attachments/assets/45411bb2-ac14-400c-a868-9c9c287a3136" width="350" alt="FastAPI Logo" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://www.rabbitmq.com" target="_blank">
+        <img src="https://github.com/user-attachments/assets/5dad1de3-8dbc-4beb-84d2-1d6963982696" width="350" alt="RabbitMQ Logo" />
       </a>
     </td>
   </tr>
@@ -26,6 +31,10 @@ This project is a full-featured Laravel + FastAPI backend for a social platform 
   - OpenAI
   - DeepSeek
   - Toxic-BERT ([HuggingFace](https://huggingface.co/unitary/toxic-bert))
+- **RabbitMQ Integration** – Asynchronous communication between Laravel and FastAPI for scalable message-driven architecture
+- **Filament Admin Dashboard** – A modern admin panel for managing users, flagged content, and system logs
+- **Tags Support** – Posts and comments can be tagged for better organization
+- **Real-time Notifications** – Flagged content and moderation decisions trigger Laravel notifications
 - **Unit Testing** – Reliable and clean test coverage using PHPUnit  
 - **Rate Limiting** – Prevent abuse and spam with Laravel’s built-in rate limiting  
 - **Automatic Content Filtering**
@@ -48,7 +57,9 @@ This project is a full-featured Laravel + FastAPI backend for a social platform 
 |----------------|-----------------------------------|
 | Laravel 12     | Core API backend                  |
 | FastAPI        | AI-based content analysis service |
+| RabbitMQ       | Message queue for async processing |
 | OpenAI / DeepSeek / Toxic-BERT | Natural language understanding & filtering |
+| Filament       | Admin dashboard                   |
 | MySQL          | Database                          |
 | PHPUnit        | Feature testing                   |
 
@@ -56,24 +67,25 @@ This project is a full-featured Laravel + FastAPI backend for a social platform 
 
 ## How It Works
 
-1. User creates a **post** or **comment**
-2. The content is sent to the **FastAPI service** for analysis
-3. Based on the AI model’s output:
-   - Content is marked as `APPROVED`, `FLAGGED`, or `PENDING`
-   - Flagged content stores the reason and confidence score
-4. Every week/month, a **pruning command** runs to delete old flagged data
-5. Only the content owner can edit, delete, or restore their post/comment
+1. User creates a **post** or **comment** in Laravel
+2. Laravel pushes the content payload to RabbitMQ (`post.analysis.request`)
+3. FastAPI consumes the message, analyzes it using the chosen AI model
+4. FastAPI sends the result to another RabbitMQ queue (`post.analysis.response`)
+5. Laravel listens for the result and updates the content’s status
+6. Flagged content is logged, and notifications are dispatched
+7. Every week/month, a **pruning command** runs to delete old flagged data
 
- ```
-User submits content ➜ AI Service analyzes ➜ Content status assigned
-                                 |
-                 ┌───────────────┴───────────────┐
-                 |                               |
-           Content is OK                 Content is Flagged
-           ➜ APPROVED                   ➜ FLAGGED
-                                         ➜ Saved in Filter Logs
-```  
-
+```
+User submits content
+        ↓
+Laravel pushes message to RabbitMQ ➜ FastAPI consumes
+        ↓                                     ↓
+Content Analyzed                  Analysis result returned via RabbitMQ
+        ↓                                     ↓
+Laravel updates status            ➜ APPROVED or FLAGGED with reason/score
+        ↓
+If flagged ➜ Log it, notify admin
+```
 
 ---
 
@@ -85,16 +97,20 @@ Schedule::command('model:prune')->daily();
 
 ---
 
-## AI Service Communication
+## AI Service Communication (Old - HTTP-based, now replaced by RabbitMQ)
 
-- Laravel calls FastAPI via HTTP (`POST /analyze`)
+> This section is for legacy reference.
+
+- Laravel **used to** call FastAPI via HTTP (`POST /analyze`)
   ```json
   {
     "title": "I hate you",
     "content": "bad words",
     "ai_model": "toxic-bert"
   }
-- FastAPI responds with:
+  ```
+
+- FastAPI responded with:
   ```json
   {
     "is_flagged": true,
@@ -102,3 +118,5 @@ Schedule::command('model:prune')->daily();
     "confidence": 0.92
   }
   ```
+
+> ⚠️ This flow is now **replaced** with **RabbitMQ queues** for async and decoupled communication.
