@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\StatusEnum;
+use App\Facades\RabbitMQ;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\HttpResponse;
 use App\Http\Requests\StorePostRequest;
@@ -44,36 +45,57 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+//    public function store(StorePostRequest $request)
+//    {
+//        $data = $request->validated();
+//        $data["user_id"] = auth()->id();
+//        $status = StatusEnum::PENDING->value;
+//
+//        $response = $this->analyzeService->analyzeContent($data['content'], $data['ai_model'], $data['title']);
+//
+//        if ($response) {
+//            if ($response["is_flagged"]){
+//                $status = StatusEnum::FLAGGED->value;
+//            } else {
+//                $status = StatusEnum::APPROVED->value;
+//            }
+//        }
+//
+//        $data["status"] = $status;
+//
+//        $post = Post::create($data);
+//
+//        if ($status === StatusEnum::FLAGGED->value) {
+//            $post->filterLogs()->create([
+//                'reason' => $response["reason"],
+//                'confidence' => $response["score"] ?? null,
+//            ]);
+//            $admins = User::role('admin')->get();
+//            Notification::sendNow($admins, new ContentFlaggedNotification($post, 'post'));
+//        }
+//
+//        return HttpResponse::sendResponse(new PostResource($post), 'Post created successfully.', 201);
+//    }
+
     public function store(StorePostRequest $request)
     {
         $data = $request->validated();
         $data["user_id"] = auth()->id();
-        $status = StatusEnum::PENDING->value;
-
-        $response = $this->analyzeService->analyzeContent($data['content'], $data['ai_model'], $data['title']);
-
-        if ($response) {
-            if ($response["is_flagged"]){
-                $status = StatusEnum::FLAGGED->value;
-            } else {
-                $status = StatusEnum::APPROVED->value;
-            }
-        }
-
-        $data["status"] = $status;
+        $data["status"] = StatusEnum::PENDING->value;
 
         $post = Post::create($data);
 
-        if ($status === StatusEnum::FLAGGED->value) {
-            $post->filterLogs()->create([
-                'reason' => $response["reason"],
-                'confidence' => $response["score"] ?? null,
-            ]);
-            $admins = User::role('admin')->get();
-            Notification::sendNow($admins, new ContentFlaggedNotification($post, 'post'));
-        }
+        $messageData = [
+            'post_id' => $post->id,
+            'title' => $data['title'],
+            'content' => $data['content'],
+            'ai_model' => $data['ai_model'],
+        ];
 
-        return HttpResponse::sendResponse(new PostResource($post), 'Post created successfully.', 201);
+        // Publish to RabbitMQ
+        RabbitMQ::publish('post.analysis.request', json_encode($messageData));
+
+        return HttpResponse::sendResponse(new PostResource($post), 'Post created successfully and sent for analysis.', 201);
     }
 
     /**
